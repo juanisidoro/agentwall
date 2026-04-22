@@ -1,0 +1,42 @@
+# ── Spec-kit (planning docs — never committed) ──────────────────────────────
+.specify/
+specs/
+
+# ── Environment ──────────────────────────────────────────────────────────────
+.env
+.env.local
+proxy/.env
+dashboard/.env
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# ── Node ─────────────────────────────────────────────────────────────────────
+node_modules/
+dashboard/dist/
+dashboard/.vite/
+
+# ── mitmproxy (CA private key — never committed) ─────────────────────────────
+.mitmproxy/
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+.docker/
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp

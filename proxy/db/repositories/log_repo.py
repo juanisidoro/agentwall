@@ -103,6 +103,17 @@ async def get_stats() -> dict:
     }
 
 
+async def get_provider_counts() -> dict:
+    db = await get_db()
+    today = datetime.now(timezone.utc).date().isoformat()
+    async with db.execute(
+        "SELECT provider, COUNT(*) as count FROM request_log WHERE DATE(timestamp) = ? GROUP BY provider",
+        (today,),
+    ) as cursor:
+        rows = await cursor.fetchall()
+    return {row["provider"]: row["count"] for row in rows if row["provider"]}
+
+
 def _deserialize_log(row: dict) -> dict:
     if "plugin_results_json" in row and row["plugin_results_json"]:
         row["plugin_results"] = json.loads(row["plugin_results_json"])

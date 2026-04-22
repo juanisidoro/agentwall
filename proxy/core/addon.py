@@ -282,7 +282,28 @@ class AgentWallAddon:
         return await get_config(plugin_id)
 
     async def _emit_request_event(self, **kwargs) -> None:
+        from db.repositories.log_repo import save_request_log
+
         event = {"type": "request", **kwargs}
+        try:
+            await save_request_log({
+                "request_id": kwargs.get("request_id", ""),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "provider": kwargs.get("provider"),
+                "model": kwargs.get("model"),
+                "destination": kwargs.get("destination"),
+                "method": kwargs.get("method", "POST"),
+                "status_code": kwargs.get("status_code"),
+                "input_tokens": kwargs.get("input_tokens"),
+                "output_tokens": kwargs.get("output_tokens"),
+                "latency_ms": kwargs.get("latency_ms"),
+                "is_blocked": kwargs.get("is_blocked", False),
+                "block_reason": kwargs.get("block_reason"),
+                "plugin_results": kwargs.get("plugin_results", []),
+            })
+        except Exception:
+            pass  # fail-open: log persistence must never break the proxy
+
         try:
             self._queue.put_nowait(event)
         except asyncio.QueueFull:
@@ -290,16 +311,32 @@ class AgentWallAddon:
 
     async def _emit_alert(self, plugin_id: str, request_id: str, result: PluginResult) -> None:
         import uuid as _uuid
+        from db.repositories.alert_repo import save_alert
 
+        alert_id = str(_uuid.uuid4())
+        timestamp = datetime.now(timezone.utc).isoformat()
         event = {
             "type": "alert",
-            "alert_id": str(_uuid.uuid4()),
+            "alert_id": alert_id,
             "plugin_id": plugin_id,
             "request_id": request_id,
             "message": result.reason or "",
             "payload": result.alert_payload or {},
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": timestamp,
         }
+        try:
+            await save_alert({
+                "alert_id": alert_id,
+                "timestamp": timestamp,
+                "plugin_id": plugin_id,
+                "request_id": request_id,
+                "severity": "warning",
+                "message": result.reason or "",
+                "payload": result.alert_payload or {},
+            })
+        except Exception:
+            pass  # fail-open
+
         try:
             self._queue.put_nowait(event)
         except asyncio.QueueFull:

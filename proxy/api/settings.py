@@ -19,10 +19,9 @@ async def health() -> dict:
 
 @router.get("/settings")
 async def get_settings() -> dict:
-    from db.repositories.config_repo import get_config
+    from db.repositories.settings_repo import get_all_settings
 
-    raw = await get_config("__global__")
-    return raw or {}
+    return await get_all_settings()
 
 
 class SettingsUpdate(BaseModel):
@@ -31,8 +30,8 @@ class SettingsUpdate(BaseModel):
 
 @router.put("/settings")
 async def update_settings(body: SettingsUpdate) -> dict:
-    from db.repositories.config_repo import set_config
+    from db.repositories.settings_repo import set_setting
 
     for key, value in body.settings.items():
-        await set_config("__global__", key, str(value))
+        await set_setting(key, str(value))
     return {"status": "ok"}
